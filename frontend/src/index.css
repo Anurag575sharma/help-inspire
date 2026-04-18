@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #D35400;
+  --primary-light: #E67E22;
+  --bg: #FAF6F0;
+  --secondary: #7B241C;
+  --text: #17202A;
+  --text-light: #5D6D7E;
+  --card: #FFFFFF;
+  --border: #E8DCCF;
+  --accent-bg: #FDF2E9;
+}
+
+html { font-size: 18px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text);
+}
+
+.font-serif { font-family: 'Cormorant Garamond', serif; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
+
+.glow-btn { box-shadow: 0 4px 20px rgba(211, 84, 0, 0.3); }
+.glow-btn:hover { box-shadow: 0 6px 28px rgba(211, 84, 0, 0.45); }
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
