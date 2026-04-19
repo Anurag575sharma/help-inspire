@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import Loader from "../components/Loader";
 import { useToast } from "../components/Toast";
 
 export default function CampaignDetail({ id, onBack }) {
   const toast = useToast();
+  const navigate = useNavigate();
   const [campaign, setCampaign] = useState(null);
   const [donors, setDonors] = useState([]);
   const [donorName, setDonorName] = useState("");
@@ -17,6 +19,8 @@ export default function CampaignDetail({ id, onBack }) {
   const [upiDetails, setUpiDetails] = useState({ upiId: "", qrImage: "", whatsappNo: "" });
   const [showQr, setShowQr] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
+  const touchStart = { current: 0 };
+  const mouseStart = { current: 0, dragging: false };
 
   const fetchCampaign = () => api.get(`/campaign/${id}`)
     .then(({ data }) => setCampaign(data))
@@ -28,6 +32,15 @@ export default function CampaignDetail({ id, onBack }) {
   });
   useEffect(() => { fetchCampaign(); fetchDonors(); fetchPaymentMode(); }, [id]);
 
+  // Auto-rotate slideshow every 4 seconds
+  useEffect(() => {
+    if (!campaign || !campaign.images?.length || campaign.images.length <= 1) return;
+    const timer = setInterval(() => {
+      setSlideIndex((i) => (i + 1) % campaign.images.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [campaign]);
+
   const handleDonate = async () => {
     if (!isAnonymous && !donorName.trim()) { setMessage("Please enter your name or check Anonymous."); return; }
     const val = Number(amount);
@@ -36,16 +49,8 @@ export default function CampaignDetail({ id, onBack }) {
     const finalName = isAnonymous ? "Anonymous" : donorName.trim();
 
     if (paymentMode === "upi") {
-      // Auto-record donation and show QR
-      try {
-        await api.post("/record-upi-donation", {
-          campaignId: id, donorName: finalName, donorEmail: donorEmail.trim(), amount: val,
-        });
-        setShowQr(true);
-        fetchCampaign(); fetchDonors();
-      } catch (err) {
-        setMessage(err?.response?.data?.error || "Something went wrong.");
-      }
+      // Just show QR — record only when user confirms payment
+      setShowQr(true);
       return;
     }
 
@@ -102,33 +107,47 @@ export default function CampaignDetail({ id, onBack }) {
           {(() => {
             const allImages = campaign.images?.length ? campaign.images : [campaign.image];
             return (
-              <div className="relative h-64 sm:h-72 bg-black">
-                <img src={allImages[slideIndex] || campaign.image} alt={campaign.title} className="w-full h-full object-contain"
+              <div className="relative h-64 sm:h-72 bg-black cursor-grab active:cursor-grabbing select-none"
+                onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }}
+                onTouchEnd={(e) => {
+                  const diff = touchStart.current - e.changedTouches[0].clientX;
+                  if (Math.abs(diff) > 50) {
+                    setSlideIndex((i) => diff > 0 ? (i + 1) % allImages.length : (i - 1 + allImages.length) % allImages.length);
+                  }
+                }}
+                onMouseDown={(e) => { mouseStart.current = e.clientX; mouseStart.dragging = true; }}
+                onMouseUp={(e) => {
+                  if (!mouseStart.dragging) return;
+                  mouseStart.dragging = false;
+                  const diff = mouseStart.current - e.clientX;
+                  if (Math.abs(diff) > 50) {
+                    setSlideIndex((i) => diff > 0 ? (i + 1) % allImages.length : (i - 1 + allImages.length) % allImages.length);
+                  }
+                }}
+                onMouseLeave={() => { mouseStart.dragging = false; }}>
+                <img src={allImages[slideIndex] || campaign.image} alt={campaign.title} className="w-full h-full object-contain transition-opacity duration-700"
                   onError={(e) => { e.target.src = "https://placehold.co/800x400/FDF2E9/D35400?text=🙏"; }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                <h1 className="absolute bottom-5 left-6 right-6 text-2xl font-serif font-bold text-white drop-shadow-lg leading-tight tracking-wide">{campaign.title}</h1>
-
                 {allImages.length > 1 && (
-                  <>
-                    <button onClick={() => setSlideIndex((i) => (i - 1 + allImages.length) % allImages.length)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm">‹</button>
-                    <button onClick={() => setSlideIndex((i) => (i + 1) % allImages.length)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm">›</button>
-                    <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-1.5">
-                      {allImages.map((_, i) => (
-                        <button key={i} onClick={() => setSlideIndex(i)}
-                          className={`w-2 h-2 rounded-full transition-all ${i === slideIndex ? "bg-white w-4" : "bg-white/50"}`} />
-                      ))}
-                    </div>
-                  </>
+                  <span className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                    {slideIndex + 1} / {allImages.length}
+                  </span>
                 )}
+                <h1 className="absolute bottom-5 left-6 right-6 text-2xl font-serif font-bold text-white drop-shadow-lg leading-tight tracking-wide">{campaign.title}</h1>
               </div>
             );
           })()}
           </div>
 
           <div className="p-4 sm:p-6 space-y-5">
-            <p className="text-[#5D6D7E] leading-relaxed">{campaign.description}</p>
+            <p className="text-[#5D6D7E] leading-relaxed whitespace-pre-line"
+              dangerouslySetInnerHTML={{
+                __html: campaign.description.replace(
+                  /(https?:\/\/[^\s<]+)/g,
+                  '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#D35400;text-decoration:underline;word-break:break-all;">$1</a>'
+                )
+              }}
+            />
 
             {/* Progress */}
             <div className="bg-[#FDF2E9] rounded-2xl p-4 sm:p-5 border border-[#E8DCCF]">
@@ -314,9 +333,24 @@ export default function CampaignDetail({ id, onBack }) {
               💬 Send Screenshot on WhatsApp
             </a>
 
+            <button onClick={async () => {
+              try {
+                const finalName = isAnonymous ? "Anonymous" : donorName.trim();
+                await api.post("/record-upi-donation", {
+                  campaignId: id, donorName: finalName, donorEmail: donorEmail.trim(), amount: Number(amount),
+                });
+                setShowQr(false);
+                navigate(`/thank-you?campaign_id=${id}`);
+              } catch { toast.error("Failed to record donation."); }
+            }}
+              className="w-full py-3 text-white font-bold rounded-xl transition-all glow-btn text-base"
+              style={{ background: "linear-gradient(135deg, #D35400, #E67E22)" }}>
+              ✅ Payment Done
+            </button>
+
             <button onClick={() => setShowQr(false)}
-              className="w-full py-2.5 border-2 border-[#E8DCCF] text-[#5D6D7E] font-medium rounded-xl hover:bg-[#FDF2E9] transition-all">
-              Close
+              className="w-full py-2 text-[#5D6D7E] text-sm hover:underline transition-all">
+              Cancel
             </button>
           </div>
         </div>

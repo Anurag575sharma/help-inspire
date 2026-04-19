@@ -13,8 +13,15 @@ export default function ThankYou() {
 
   useEffect(() => {
     api.get("/settings/payment-mode").then(({ data }) => setForm80gUrl(data.form80gUrl || "")).catch(() => {});
-    if (!orderId) { setStatus("error"); return; }
 
+    // UPI flow — no order_id, already recorded
+    if (!orderId) {
+      if (campaignId) { setStatus("success"); return; }
+      setStatus("error");
+      return;
+    }
+
+    // Cashfree flow — verify with backend
     api.post("/verify-payment", { orderId })
       .then(({ data }) => {
         setStatus("success");
