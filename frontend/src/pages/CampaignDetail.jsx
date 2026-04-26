@@ -337,7 +337,7 @@ export default function CampaignDetail({ id, onBack }) {
               <p className="text-xs text-[#5D6D7E] mt-1">After payment, send screenshot on WhatsApp for confirmation</p>
             </div>
 
-            <a href={`https://wa.me/${upiDetails.whatsappNo || "917692932955"}?text=${encodeURIComponent(`🙏 Hare Krishna!\n\nI just donated ₹${Number(amount).toLocaleString("en-IN")} for "${campaign?.title}".\n\nName: ${isAnonymous ? "Anonymous" : donorName}\n\nAttaching payment screenshot.`)}`}
+            <a href={`https://wa.me/${upiDetails.whatsappNo || "917692932955"}?text=${encodeURIComponent(`🙏 Hare Krishna!\n\nI just donated ₹${Number(amount).toLocaleString("en-IN")} for "${campaign?.title}" at ISKCON Ujjain.\n\nName: ${isAnonymous ? "Anonymous" : donorName}\n\nAttaching payment screenshot.`)}`}
               target="_blank" rel="noopener noreferrer"
               className="w-full py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all">
               💬 Send Screenshot on WhatsApp

@@ -522,7 +522,7 @@ export default function CreateCampaign() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-amber-800 mb-1">UPI ID</label>
-                    <input type="text" value={upiId} onChange={(e) => setUpiId(e.target.value)} placeholder="e.g. inspiremanit@upi"
+                    <input type="text" value={upiId} onChange={(e) => setUpiId(e.target.value)} placeholder="e.g. iskconujjain@upi"
                       className="w-full px-3 py-2 border border-amber-200 rounded-lg bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-amber-300" />
                   </div>
                   <div>
@@ -533,7 +533,7 @@ export default function CreateCampaign() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-amber-800 mb-1">WhatsApp Number (with country code)</label>
-                    <input type="text" value={whatsappNo} onChange={(e) => setWhatsappNo(e.target.value)} placeholder="e.g. 917692932955"
+                    <input type="text" value={whatsappNo} onChange={(e) => setWhatsappNo(e.target.value)} placeholder="e.g. 917692932955 (ISKCON Ujjain)"
                       className="w-full px-3 py-2 border border-amber-200 rounded-lg bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-amber-300" />
                   </div>
                   <div className="flex gap-2">
